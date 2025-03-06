@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Матрица анимированных шаров</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 10px;
+            width: 800px;
+            height: 800px;
+        }
+
+        .ball {
+            width: 100%;
+            height: 100%;
+            background-color: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.7);
+            opacity: 0;
+        }
+
+        @keyframes ignite {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+                box-shadow: 0 0 0px rgba(255, 255, 0, 0);
+            }
+            5% {
+                opacity: 0.25;
+                transform: scale(0.6);
+                box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+            }
+            10% {
+                opacity: 0.5;
+                transform: scale(0.7);
+                box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+            }
+            15% {
+                opacity: 0.75;
+                transform: scale(0.9);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.6);
+            }
+            20% {
+                opacity: 1;
+                transform: scale(1.2);
+                box-shadow: 0 0 40px rgba(255, 255, 0, 0.8);
+            }
+            25% {
+                opacity: 0.95;
+                transform: scale(1.15);
+                box-shadow: 0 0 35px rgba(255, 255, 0, 0.75);
+            }
+            30% {
+                opacity: 0.93;
+                transform: scale(1.13);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.73);
+            }
+            35% {
+                opacity: 0.9;
+                transform: scale(1.1);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.7);
+            }
+            40% {
+                opacity: 0.93;
+                transform: scale(1.07);
+                box-shadow: 0 0 25px rgba(255, 255, 0, 0.73);
+            }
+            45% {
+                opacity: 0.97;
+                transform: scale(1.03);
+                box-shadow: 0 0 28px rgba(255, 255, 0, 0.77);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+            }
+            55% {
+                opacity: 0.97;
+                transform: scale(1.03);
+                box-shadow: 0 0 28px rgba(255, 255, 0, 0.77);
+            }
+            60% {
+                opacity: 0.93;
+                transform: scale(1.07);
+                box-shadow: 0 0 25px rgba(255, 255, 0, 0.73);
+            }
+            65% {
+                opacity: 0.9;
+                transform: scale(1.1);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.7);
+            }
+            70% {
+                opacity: 0.93;
+                transform: scale(1.13);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.73);
+            }
+            75% {
+                opacity: 0.95;
+                transform: scale(1.15);
+                box-shadow: 0 0 35px rgba(255, 255, 0, 0.75);
+            }
+            80% {
+                opacity: 1;
+                transform: scale(1.2);
+                box-shadow: 0 0 40px rgba(255, 255, 0, 0.8);
+            }
+            85% {
+                opacity: 0.75;
+                transform: scale(0.9);
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.6);
+            }
+            90% {
+                opacity: 0.5;
+                transform: scale(0.7);
+                box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+            }
+            95% {
+                opacity: 0.25;
+                transform: scale(0.6);
+                box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+                box-shadow: 0 0 0px rgba(255, 255, 0, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix" id="matrix"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const matrix = document.getElementById('matrix');
+            
+            // Размер матрицы
+            const rows = 8;
+            const cols = 8;
+            
+            // Координаты центра
+            const centerX = (cols - 1) / 2;
+            const centerY = (rows - 1) / 2;
+            
+            // Случайное количество одновременно горящих шаров (от 5 до 20)
+            let maxActiveBalls = 5 + Math.floor(Math.random() * 16);
+            console.log(`Максимальное количество одновременно горящих шаров: ${maxActiveBalls}`);
+            
+            // Функция для изменения количества разрешенных к горению шаров
+            function updateMaxActiveBalls() {
+                // Генерируем новое случайное значение от 3 до 50
+                const oldValue = maxActiveBalls;
+                const targetValue = 3 + Math.floor(Math.random() * 48);
+                
+                console.log(`Изменение максимального количества горящих шаров: ${oldValue} -> ${targetValue}`);
+                
+                // Флаг для отслеживания состояния коррекции количества шаров
+                let adjustmentComplete = false;
+                
+                // Создаем индикатор изменения
+                const indicator = document.createElement('div');
+                indicator.style.position = 'fixed';
+                indicator.style.top = '20px';
+                indicator.style.left = '50%';
+                indicator.style.transform = 'translateX(-50%)';
+                indicator.style.padding = '10px 20px';
+                indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                indicator.style.color = '#fff';
+                indicator.style.borderRadius = '5px';
+                indicator.style.fontFamily = 'Arial, sans-serif';
+                indicator.style.zIndex = '1000';
+                indicator.style.transition = 'background-color 0.5s ease';
+                indicator.textContent = `Шаров: ${oldValue} → ${targetValue}`;
+                document.body.appendChild(indicator);
+                
+                // Плавное изменение значения с анимацией
+                const duration = 5000; // 5 секунд для анимации
+                const startTime = performance.now();
+                
+                // Функция для проверки и коррекции количества активных шаров
+                function adjustActiveBallCount(currentMaxBalls) {
+                    const activeBalls = allBalls.filter(ball => {
+                        const style = window.getComputedStyle(ball);
+                        return parseFloat(style.opacity) > 0.3;
+                    }).length;
+                    
+                    // Если количество активных шаров больше максимального, инициируем затухание
+                    if (activeBalls > currentMaxBalls) {
+                        // Находим количество шаров, которые нужно потушить
+                        const difference = activeBalls - currentMaxBalls;
+                        indicator.textContent = `Шаров: ${currentMaxBalls} (затухание ${difference})`;
+                        
+                        // Вызываем updateActiveBalls для инициирования затухания лишних шаров
+                        updateActiveBalls(false, true);
+                        return false; // Коррекция еще не завершена
+                    } 
+                    // Если количество активных шаров меньше максимального и есть ожидающие шары
+                    else if (activeBalls < currentMaxBalls && pendingBalls.length > 0) {
+                        // Находим количество шаров, которые можно активировать
+                        const difference = Math.min(currentMaxBalls - activeBalls, pendingBalls.length);
+                        indicator.textContent = `Шаров: ${currentMaxBalls} (активация ${difference})`;
+                        
+                        // Вызываем updateActiveBalls для активации шаров из очереди
+                        updateActiveBalls(true, false);
+                        return false; // Коррекция еще не завершена
+                    } 
+                    else {
+                        // Количество шаров соответствует максимальному или нет возможности активировать новые
+                        indicator.textContent = `Шаров: ${currentMaxBalls} (готово)`;
+                        return true; // Коррекция завершена
+                    }
+                }
+                
+                // Функция для анимации изменения значения
+                function animateValueChange(timestamp) {
+                    // Определяем прошедшее время
+                    const elapsed = timestamp - startTime;
+                    
+                    // Вычисляем процент выполнения анимации
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Используем функцию плавной интерполяции (ease-in-out)
+                    const easedProgress = progress < 0.5 ? 
+                        2 * progress * progress : 
+                        1 - Math.pow(-2 * progress + 2, 2) / 2;
+                    
+                    // Интерполируем значение
+                    const currentValue = Math.round(oldValue + (targetValue - oldValue) * easedProgress);
+                    maxActiveBalls = currentValue;
+                    
+                    // Обновляем индикатор
+                    indicator.textContent = `Шаров: ${currentValue}`;
+                    
+                    // Изменяем цвет индикатора в зависимости от направления изменения
+                    if (targetValue > oldValue) {
+                        indicator.style.backgroundColor = `rgba(0, ${Math.floor(easedProgress * 128)}, 0, 0.7)`;
+                    } else {
+                        indicator.style.backgroundColor = `rgba(${Math.floor(easedProgress * 128)}, 0, 0, 0.7)`;
+                    }
+                    
+                    // Каждые 500 мс корректируем количество активных шаров
+                    if (Math.floor(elapsed / 500) !== Math.floor((elapsed - 16) / 500)) {
+                        // Корректируем количество активных шаров, чтобы оно соответствовало текущему maxActiveBalls
+                        updateActiveBalls(currentValue > oldValue, currentValue < oldValue);
+                    }
+                    
+                    // Проверяем, нужно ли продолжать анимацию
+                    if (progress < 1) {
+                        requestAnimationFrame(animateValueChange);
+                    } else {
+                        // Анимация завершена, устанавливаем точное значение
+                        maxActiveBalls = targetValue;
+                        
+                        // Начинаем фазу коррекции фактического количества шаров
+                        checkAndAdjustBalls();
+                    }
+                }
+                
+                // Функция для проверки и корректировки количества шаров после завершения анимации
+                function checkAndAdjustBalls() {
+                    // Проверяем соответствие активных шаров максимальному значению
+                    adjustmentComplete = adjustActiveBallCount(targetValue);
+                    
+                    if (!adjustmentComplete) {
+                        // Если коррекция не завершена, проверяем снова через короткое время
+                        setTimeout(checkAndAdjustBalls, 1000);
+                    } else {
+                        // Коррекция завершена, обновляем индикатор
+                        indicator.textContent = `Шаров: ${targetValue} (готово)`;
+                        
+                        // Удаляем индикатор через 1 секунду после завершения анимации
+                        setTimeout(() => {
+                            document.body.removeChild(indicator);
+                            // Сигнализируем о завершении всего процесса
+                            scheduleNextUpdate();
+                        }, 1000);
+                    }
+                }
+                
+                // Запускаем анимацию
+                requestAnimationFrame(animateValueChange);
+                
+                // Возвращаем обещание, которое разрешится, когда анимация и коррекция завершатся
+                return new Promise((resolve) => {
+                    const checkCompletion = () => {
+                        if (adjustmentComplete) {
+                            resolve();
+                        } else {
+                            setTimeout(checkCompletion, 500);
+                        }
+                    };
+                    setTimeout(checkCompletion, 1000);
+                });
+            }
+            
+            // Запускаем периодическое изменение максимального количества шаров
+            // Интервал от 15 до 40 секунд
+            let updateInProgress = false;
+            let updateScheduled = false;
+            
+            function scheduleNextUpdate() {
+                // Если обновление уже запланировано, ничего не делаем
+                if (updateScheduled) return;
+                
+                // Отмечаем, что обновление запланировано
+                updateScheduled = true;
+                
+                const nextUpdateTime = 15000 + Math.random() * 25000; // от 15 до 40 секунд
+                setTimeout(() => {
+                    // Снимаем флаг запланированного обновления
+                    updateScheduled = false;
+                    
+                    // Если предыдущее обновление ещё выполняется, пропускаем этот шаг
+                    if (updateInProgress) {
+                        console.log("Предыдущее обновление не завершено, пропускаем");
+                        scheduleNextUpdate();
+                        return;
+                    }
+                    
+                    // Отмечаем начало процесса обновления
+                    updateInProgress = true;
+                    
+                    // Запускаем обновление и ждем его завершения
+                    updateMaxActiveBalls().then(() => {
+                        // Отмечаем завершение процесса обновления
+                        updateInProgress = false;
+                        // Не планируем следующее обновление здесь, это будет сделано после полного завершения
+                    });
+                }, nextUpdateTime);
+            }
+            
+            // Начинаем периодическое обновление
+            scheduleNextUpdate();
+            
+            // Массив всех шаров
+            const allBalls = [];
+            // Очередь шаров, ожидающих начала анимации
+            const pendingBalls = [];
+            
+            // Функция расчета расстояния между шарами
+            function getDistance(ball1, ball2) {
+                const x1 = parseInt(ball1.dataset.x);
+                const y1 = parseInt(ball1.dataset.y);
+                const x2 = parseInt(ball2.dataset.x);
+                const y2 = parseInt(ball2.dataset.y);
+                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            }
+            
+            // Функция для получения ближайшего расстояния до любого горящего шара
+            function getNearestBurningDistance(ball) {
+                // Находим все горящие шары
+                const burningBalls = allBalls.filter(b => {
+                    const style = window.getComputedStyle(b);
+                    return parseFloat(style.opacity) > 0.3;
+                });
+                
+                if (burningBalls.length === 0) {
+                    // Если нет горящих шаров, возвращаем большое значение
+                    return Infinity;
+                }
+                
+                // Находим минимальное расстояние до горящего шара
+                let minDistance = Infinity;
+                for (const burningBall of burningBalls) {
+                    const distance = getDistance(ball, burningBall);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                    }
+                }
+                
+                return minDistance;
+            }
+            
+            // Функция для инициации возгорания шара с вероятностью, зависящей от близости к горящим
+            function shouldIgnite(ball) {
+                const distance = getNearestBurningDistance(ball);
+                
+                // Если нет горящих шаров, разрешаем возгорание с вероятностью 10%
+                if (distance === Infinity) {
+                    return Math.random() < 0.1;
+                }
+                
+                // Вероятность возгорания обратно пропорциональна расстоянию до ближайшего горящего шара
+                // Если шар находится рядом (расстояние 1), вероятность 90%
+                // Если шар находится далеко (расстояние 7+), вероятность 10%
+                const probability = Math.max(0.1, Math.min(0.9, 1 - (distance / 10)));
+                return Math.random() < probability;
+            }
+            
+            // Функция для управления количеством активных шаров
+            function updateActiveBalls(forceActivation = false, forceDeactivation = false) {
+                // Подсчитываем количество активных шаров (opacity > 0.3)
+                let activeBalls = allBalls.filter(ball => {
+                    const style = window.getComputedStyle(ball);
+                    return parseFloat(style.opacity) > 0.3;
+                }).length;
+                
+                console.log(`Активных шаров: ${activeBalls}, максимально: ${maxActiveBalls}`);
+                
+                // Если есть ожидающие шары и есть свободные слоты, запускаем их
+                if (pendingBalls.length > 0 && (activeBalls < maxActiveBalls || forceActivation)) {
+                    const freeSlots = maxActiveBalls - activeBalls;
+                    let availableSlots = freeSlots;
+                    
+                    // Сортируем ожидающие шары по расстоянию до ближайших горящих
+                    const sortedPending = [...pendingBalls].sort((a, b) => {
+                        const distA = getNearestBurningDistance(a);
+                        const distB = getNearestBurningDistance(b);
+                        return distA - distB; // Сортировка от ближайших к дальним
+                    });
+                    
+                    // Проходим по отсортированным шарам и активируем ближайшие
+                    const activatedIndices = [];
+                    // Если форсируем активацию, то берем больше шаров из очереди
+                    const maxToActivate = forceActivation ? Math.min(sortedPending.length, Math.max(5, Math.floor(maxActiveBalls * 0.3))) : availableSlots;
+                    for (let i = 0; i < sortedPending.length && availableSlots > 0 && i < maxToActivate; i++) {
+                        const ball = sortedPending[i];
+                        // Проверяем, должен ли шар загореться на основе близости
+                        if (shouldIgnite(ball)) {
+                            ball.dataset.animationStatus = 'running';
+                            ball.style.animationPlayState = 'running';
+                            activatedIndices.push(pendingBalls.indexOf(ball));
+                            availableSlots--;
+                        }
+                    }
+                    
+                    // Удаляем активированные шары из очереди ожидания (в обратном порядке, чтобы индексы не сбивались)
+                    activatedIndices.sort((a, b) => b - a).forEach(index => {
+                        pendingBalls.splice(index, 1);
+                    });
+                }
+                
+                // Если активных шаров больше максимального количества
+                if (activeBalls > maxActiveBalls) {
+                    // Находим шары, которые сейчас горят
+                    const burningBalls = allBalls.filter(ball => {
+                        const style = window.getComputedStyle(ball);
+                        return parseFloat(style.opacity) > 0.3;
+                    });
+                    
+                    // Случайно выбираем шары для "тушения"
+                    const ballsToDeactivate = activeBalls - maxActiveBalls;
+                    // Сортируем по расстоянию до центра (сначала тушим дальние шары)
+                    const shuffled = [...burningBalls].sort((a, b) => {
+                        const groupA = parseInt(a.dataset.group);
+                        const groupB = parseInt(b.dataset.group);
+                        // Если группы разные, сначала тушим дальние
+                        if (groupA !== groupB) return groupA - groupB;
+                        // Если группы одинаковые, случайный выбор
+                        return 0.5 - Math.random();
+                    });
+                    
+                    // Отключаем анимацию для лишних шаров
+                    for (let i = 0; i < ballsToDeactivate; i++) {
+                        if (i < shuffled.length) {
+                            const ball = shuffled[i];
+                            ball.dataset.animationStatus = 'cooling';
+                            // Форсируем затухание шара
+                            const currentKeyframe = getComputedStyle(ball).animationName;
+                            // Создаём временный keyframe для плавного ускоренного затухания
+                            const tempStyle = document.createElement('style');
+                            const tempName = `cooling-${Date.now()}-${i}`;
+                            
+                            // Получаем текущие стили шара
+                            const currentOpacity = parseFloat(getComputedStyle(ball).opacity);
+                            const currentTransform = getComputedStyle(ball).transform;
+                            const currentBoxShadow = getComputedStyle(ball).boxShadow;
+                            
+                            // Создаем более плавную анимацию затухания с несколькими ключевыми кадрами
+                            tempStyle.textContent = `
+                                @keyframes ${tempName} {
+                                    0% { opacity: ${currentOpacity}; transform: ${currentTransform}; box-shadow: ${currentBoxShadow}; }
+                                    20% { opacity: ${currentOpacity * 0.8}; transform: scale(${0.9 * parseFloat(currentTransform.match(/scale\(([^)]+)\)/)?.[1] || 1)}); box-shadow: 0 0 ${Math.floor(parseInt(currentBoxShadow.match(/0 0 (\d+)px/)?.[1] || 30) * 0.8)}px rgba(255, 255, 0, 0.7); }
+                                    40% { opacity: ${currentOpacity * 0.6}; transform: scale(${0.8 * parseFloat(currentTransform.match(/scale\(([^)]+)\)/)?.[1] || 1)}); box-shadow: 0 0 ${Math.floor(parseInt(currentBoxShadow.match(/0 0 (\d+)px/)?.[1] || 30) * 0.6)}px rgba(255, 255, 0, 0.5); }
+                                    60% { opacity: ${currentOpacity * 0.4}; transform: scale(${0.7 * parseFloat(currentTransform.match(/scale\(([^)]+)\)/)?.[1] || 1)}); box-shadow: 0 0 ${Math.floor(parseInt(currentBoxShadow.match(/0 0 (\d+)px/)?.[1] || 30) * 0.4)}px rgba(255, 255, 0, 0.3); }
+                                    80% { opacity: ${currentOpacity * 0.2}; transform: scale(${0.6 * parseFloat(currentTransform.match(/scale\(([^)]+)\)/)?.[1] || 1)}); box-shadow: 0 0 ${Math.floor(parseInt(currentBoxShadow.match(/0 0 (\d+)px/)?.[1] || 30) * 0.2)}px rgba(255, 255, 0, 0.2); }
+                                    100% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0px rgba(255, 255, 0, 0); }
+                                }
+                            `;
+                            document.head.appendChild(tempStyle);
+                            
+                            // Применяем временную анимацию затухания
+                            ball.style.animation = `${tempName} 2.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards`;
+                            
+                            // Добавляем шар в очередь ожидания после затухания
+                            setTimeout(() => {
+                                ball.style.opacity = 0;
+                                ball.dataset.animationStatus = 'waiting';
+                                pendingBalls.push(ball);
+                                // Удаляем временный стиль
+                                document.head.removeChild(tempStyle);
+                            }, 2500);
+                        }
+                    }
+                }
+            }
+            
+            // Обновляем состояние каждые 3 секунды
+            setInterval(updateActiveBalls, 3000);
+            
+            // Создаем матрицу 8x8 шаров
+            for(let y = 0; y < rows; y++) {
+                for(let x = 0; x < cols; x++) {
+                    // Вычисляем расстояние от центра (по диагонали будет больше)
+                    const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                    // Определяем группу (от 0 до 3) на основе расстояния 
+                    const group = Math.min(3, Math.floor(distFromCenter / 1.5));
+                    
+                    const ball = document.createElement('div');
+                    ball.className = 'ball';
+                    ball.dataset.animationStatus = 'initial';
+                    // Сохраняем координаты для расчета расстояний
+                    ball.dataset.x = x;
+                    ball.dataset.y = y;
+                    ball.dataset.group = group;
+                    // Добавляем шар в массив для отслеживания
+                    allBalls.push(ball);
+                    
+                    // Случайные продолжительности частей анимации
+                    const animDuration = 25 + Math.random() * 15; // от 25 до 40 секунд для анимации
+                    const offDuration = 30 + Math.random() * 30; // от 30 до 60 секунд для потушенного состояния
+                    const totalDuration = animDuration + offDuration;
+                    
+                    // Случайная начальная задержка для более разнообразного поведения
+                    const delay = Math.random() * 30.0;
+                    ball.style.animationDelay = `${delay}s`;
+                    ball.style.animationDuration = `${totalDuration}s`;
+                    
+                    // Добавляем слушатель события начала анимации для отслеживания активных шаров
+                    ball.addEventListener('animationstart', () => {
+                        // Проверяем, можно ли начать возгорание
+                        const activeBalls = allBalls.filter(b => {
+                            const style = window.getComputedStyle(b);
+                            return parseFloat(style.opacity) > 0.3;
+                        }).length;
+                        
+                        // Проверяем близость к горящим шарам (для первых нескольких шаров не проверяем)
+                        const shouldStart = activeBalls < 3 || shouldIgnite(ball);
+                        
+                        // Если лимит активных шаров превышен, добавляем в очередь ожидания
+                        if (activeBalls >= maxActiveBalls || !shouldStart) {
+                            ball.style.animationPlayState = 'paused';
+                            ball.dataset.animationStatus = 'waiting';
+                            ball.style.opacity = 0;
+                            // Добавляем в очередь ожидания
+                            if (!pendingBalls.includes(ball)) {
+                                pendingBalls.push(ball);
+                            }
+                            return;
+                        }
+                        
+                        ball.dataset.animationStatus = 'running';
+                    });
+                    
+                    // Обработчик завершения анимации
+                    ball.addEventListener('animationend', () => {
+                        // Если это было затухание из-за принудительного охлаждения
+                        if (ball.dataset.animationStatus === 'cooling') {
+                            return;
+                        }
+                        
+                        // Для завершения обычного цикла анимации
+                        ball.dataset.animationStatus = 'completed';
+                    });
+                    
+                    // Обработчик повторения анимации
+                    ball.addEventListener('animationiteration', () => {
+                        // Проверяем лимит активных шаров перед новой итерацией
+                        const activeBalls = allBalls.filter(b => {
+                            const style = window.getComputedStyle(b);
+                            return parseFloat(style.opacity) > 0.3;
+                        }).length;
+                        
+                        if (activeBalls > maxActiveBalls && Math.random() < 0.7) {
+                            // Приостанавливаем и добавляем в очередь ожидания
+                            ball.style.animationPlayState = 'paused';
+                            ball.dataset.animationStatus = 'waiting';
+                            ball.style.opacity = 0;
+                            if (!pendingBalls.includes(ball)) {
+                                pendingBalls.push(ball);
+                            }
+                        } else {
+                            ball.dataset.animationStatus = 'running';
+                        }
+                    });
+                    
+                    // Настройка для создания длительного потушенного состояния
+                    const animPercent = (animDuration / totalDuration) * 100;
+                    const keyframesStyle = document.createElement('style');
+                   
+                    // ID шара на основе его координат
+                    const i = y * cols + x;
+                
+                    // Создаем большее количество ключевых кадров с тригонометрической интерполяцией
+                    let keyframesText = `
+                        @keyframes ball-${i} {
+                            0% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0px rgba(255, 255, 0, 0); }`;
+                    
+                    // Увеличиваем количество кадров для фазы разгорания (от 0% до 20% анимации)
+                    const ignitionSteps = 30; // Удваиваем количество шагов для более плавного эффекта
+                    const ignitionEnd = animPercent * 0.2;
+                    
+                    for (let step = 1; step <= ignitionSteps; step++) {
+                        const percentage = (ignitionEnd * step / ignitionSteps).toFixed(2);
+                        // Используем синус для создания более плавного эффекта 
+                        const sinValue = Math.sin((step / ignitionSteps) * Math.PI / 2); // от 0 до 1 по синусоидальной кривой
+                        const opacityValue = sinValue;
+                        // Для центральных элементов делаем масштаб больше
+                        const maxScale = group === 0 ? 1.4 : (group === 1 ? 1.3 : (group === 2 ? 1.2 : 1.1));
+                        const scaleValue = 0.5 + (sinValue * (maxScale - 0.5)); 
+                        const glowValue = Math.floor(sinValue * 40);
+                        
+                        keyframesText += `
+                            ${percentage}% { opacity: ${opacityValue.toFixed(2)}; transform: scale(${scaleValue.toFixed(2)}); box-shadow: 0 0 ${glowValue}px rgba(255, ${Math.floor(255 * sinValue)}, 0, ${(0.3 + sinValue * 0.5).toFixed(2)}); }`;
+                    }
+                    
+                    // Запоминаем конечные значения фазы возгорания для плавного перехода
+                    const endIgnitionOpacity = 1.0;
+                    const endIgnitionMaxScale = group === 0 ? 1.4 : (group === 1 ? 1.3 : (group === 2 ? 1.2 : 1.1));
+                    const endIgnitionGlow = 40;
+                    
+                    // Фаза устойчивого горения (от 20% до 60% анимации)
+                    const burningStart = ignitionEnd;
+                    const burningEnd = animPercent * 0.8;
+                    const burningSteps = 20; // Увеличиваем количество шагов для фазы горения
+                    
+                    // Обеспечиваем плавный переход из фазы возгорания в фазу горения
+                    keyframesText += `
+                        ${burningStart.toFixed(2)}% { opacity: ${endIgnitionOpacity.toFixed(2)}; transform: scale(${endIgnitionMaxScale.toFixed(2)}); box-shadow: 0 0 ${endIgnitionGlow}px rgba(255, 255, 0, 0.8); }`;
+                    
+                    for (let step = 0; step <= burningSteps; step++) {
+                        const percentage = (burningStart + (burningEnd - burningStart) * step / burningSteps).toFixed(2);
+                        // Пропускаем первый шаг, так как мы уже добавили его для плавного перехода
+                        if (step === 0) continue;
+                        
+                        // Используем cos для небольших колебаний в интенсивности пламени
+                        const cosValue = 0.9 + (Math.cos(step * Math.PI / 2) * 0.1);
+                        // Для центральных элементов делаем колебания масштаба больше
+                        const maxScale = group === 0 ? 1.45 : (group === 1 ? 1.35 : (group === 2 ? 1.25 : 1.15));
+                        const minScale = group === 0 ? 1.3 : (group === 1 ? 1.1 : (group === 2 ? 1.0 : 0.95));
+                        const amplitude = (maxScale - minScale) / 2;
+                        const midScale = (maxScale + minScale) / 2;
+                        // Более плавные колебания с меньшей амплитудой
+                        const scaleValue = midScale + (Math.sin(step * Math.PI * 0.3) * amplitude * 0.5); // Замедляем колебания
+                        // Увеличиваем свечение для центральных элементов
+                        const baseGlow = group === 0 ? 60 : (group === 1 ? 50 : (group === 2 ? 40 : 30));
+                        // Более плавные изменения свечения
+                        const glowValue = baseGlow + Math.floor(Math.sin(step * Math.PI * 0.3) * 10); // Замедляем колебания
+                        
+                        keyframesText += `
+                            ${percentage}% { opacity: ${cosValue.toFixed(2)}; transform: scale(${scaleValue.toFixed(2)}); box-shadow: 0 0 ${glowValue}px rgba(255, ${Math.floor(255 * 0.8 + 50 * Math.sin(step))}, 0, 0.8); }`;
+                    }
+                    
+                    // Запоминаем конечные значения фазы горения для плавного перехода
+                    const lastStepBurning = burningSteps;
+                    const endBurningOpacity = 0.9 + (Math.cos(lastStepBurning * Math.PI / 2) * 0.1);
+                    const maxScaleBurning = group === 0 ? 1.45 : (group === 1 ? 1.35 : (group === 2 ? 1.25 : 1.15));
+                    const minScaleBurning = group === 0 ? 1.3 : (group === 1 ? 1.1 : (group === 2 ? 1.0 : 0.95));
+                    const amplitudeBurning = (maxScaleBurning - minScaleBurning) / 2;
+                    const midScaleBurning = (maxScaleBurning + minScaleBurning) / 2;
+                    const endBurningScale = midScaleBurning + (Math.sin(lastStepBurning * Math.PI * 0.3) * amplitudeBurning * 0.5);
+                    const baseGlowBurning = group === 0 ? 60 : (group === 1 ? 50 : (group === 2 ? 40 : 30));
+                    const endBurningGlow = baseGlowBurning + Math.floor(Math.sin(lastStepBurning * Math.PI * 0.3) * 10);
+                    
+                    // Фаза затухания (от 60% до 100% анимации)
+                    const extinctionStart = burningEnd;
+                    const extinctionEnd = animPercent;
+                    const extinctionSteps = 30; // Удваиваем количество шагов для фазы затухания
+                    
+                    // Обеспечиваем плавный переход из фазы горения в фазу затухания
+                    keyframesText += `
+                        ${extinctionStart.toFixed(2)}% { opacity: ${endBurningOpacity.toFixed(2)}; transform: scale(${endBurningScale.toFixed(2)}); box-shadow: 0 0 ${endBurningGlow}px rgba(255, 220, 0, 0.8); }`;
+                    
+                    for (let step = 0; step <= extinctionSteps; step++) {
+                        const percentage = (extinctionStart + (extinctionEnd - extinctionStart) * step / extinctionSteps).toFixed(2);
+                        // Пропускаем первый шаг, так как мы уже добавили его для плавного перехода
+                        if (step === 0) continue;
+                        
+                        // Используем cos для плавного затухания
+                        // Более плавное затухание, начиная от близкого к 1 значения
+                        const cosValue = Math.cos(((step - 1) / (extinctionSteps - 1)) * Math.PI / 2.5); // Делаем затухание медленнее
+                        const opacityValue = cosValue;
+                        // Для центральных элементов делаем масштаб больше
+                        // Используем конечное значение масштаба из фазы горения в качестве начального
+                        const scaleValue = endBurningScale - (step / extinctionSteps) * (endBurningScale - 0.5);
+                        const glowValue = Math.floor(cosValue * 40);
+                        
+                        keyframesText += `
+                            ${percentage}% { opacity: ${opacityValue.toFixed(2)}; transform: scale(${scaleValue.toFixed(2)}); box-shadow: 0 0 ${glowValue}px rgba(255, ${Math.floor(255 * cosValue)}, 0, ${(0.3 + cosValue * 0.5).toFixed(2)}); }`;
+                    }
+                    
+                    // Завершаем анимацию периодом "потушенности"
+                    keyframesText += `
+                            ${animPercent.toFixed(2)}% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0px rgba(255, 255, 0, 0); }
+                            100% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 0px rgba(255, 255, 0, 0); }
+                        }`;
+                    
+                    keyframesStyle.textContent = keyframesText;
+                    document.head.appendChild(keyframesStyle);
+                    ball.style.animation = `ball-${i} ${totalDuration}s cubic-bezier(0.25, 0.1, 0.25, 0.9) ${Math.random() * 15}s infinite`;
+                    
+                    // Создаем случайные оттенки для шаров
+                    // Оттенок зависит от группы - более горячий в центре
+                    const baseHue = 60; // Базовый желтый цвет
+                    const hue = baseHue + (Math.random() * 10 - 5); // Вариация ±5 от желтого
+                    const saturation = group === 0 ? 100 : (group === 1 ? 95 : (group === 2 ? 90 : 85));
+                    const lightness = group === 0 ? 65 : (group === 1 ? 60 : (group === 2 ? 55 : 50));
+                    ball.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+                    // Для упорядоченного затухания добавляем событие окончания анимации
+                    ball.style.zIndex = 4 - group; // Центральные элементы выше
+                    
+                    matrix.appendChild(ball);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
